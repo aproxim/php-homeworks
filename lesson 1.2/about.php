@@ -1,6 +1,7 @@
 <?php
 $name = 'Ольга';
-$age = 33;
+$x = date ('Y');
+$yearOfBirth =1985 ;
 $email = 'aproxim@rambler.ru';
 $city = 'Санкт-Петербург';
 $aboutMe = 'Начинающий Веб-разработчик';
@@ -33,7 +34,7 @@ $aboutMe = 'Начинающий Веб-разработчик';
     </dl>
     <dl>
       <dt>Возраст:</dt>
-      <dd><?= $age ?></dd>
+      <dd><?= $x-$yearOfBirth ?></dd>
     </dl>
     <dl>
       <dt>Адрес электронной почты:</dt>
