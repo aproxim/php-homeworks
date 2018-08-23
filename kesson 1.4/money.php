@@ -1,44 +1,37 @@
 <?php
-//const csv_file = 'money.csv';
+$date = date('Y-m-d');
+if ($argc < 2) {
+  echo "Ошибка! Аргументы не заданы. Укажите флаг --today или запустите скрипт с аргументами {цена} и {описание покупки}";
+} elseif ($argv[1]<= 0){
+		echo 'Ошибка! Введите корректную сумму';
+	} else {
+		
+		$row= [
+			"date" => date($date),
+			"cost" => number_format($argv[1],2,".",""),
+			"name" =>  implode(" ", array_slice($argv, 2))
+		];
+	$handle = fopen("money.csv", "a"); 
+	fputcsv($handle, $row);
+    echo "Добавлена строка: $row";
+    fclose($handle );
+    }	
 
-/*$array = [	
-		"date" => date('d.m.Y'),
-		"cost" => (),
-		"name" => ()
-		];  */
-
-//Открываем csv для до-записи, 
-$handle = fopen("money.csv", "a"); 
-foreach ($array as $value) { 
-    //Записываем, 3-ий параметр - разделитель поля
-    fputcsv($handle, explode(";", $value), ";"); 
-     }
- fclose($handle); 
- 
 //Возвращаем массив с данными из csv
 $handle = fopen("money.csv", "r");
-if ($handle !== FALSE ) { 
-	$data = fgetcsv ( $handle , 1000, ";");
-	while ( $data !== FALSE ) {
-	$num = count ( $data );
-	$row++;
-	/*for ($c = 0; $c < $num; $c++ ) { 
-		echo $data [$c] . "<br/>\n";
-	} */
-	$data = fgetcsv($handle,1000, ";");
-	}
-	fclose($handle); 
-	return $adata; //
-}
- 
-// Запись новой информации в CSV
- //$array = array($date; 256; "праздничный кекс");
-     
-//Если csv файл не существует, выводим сообщение
+$sum = 0;
+	if ($handle!== FALSE) {
+        while (($row = fgetcsv($handle, 1000, ',')) !== FALSE) {
+			if ($row[0] === date('Y-m-d')) {
+				$sum += $row[1];
+			}
+        }
+        echo "$date Потрачено: $sum";
+    }
+fclose($handle); 
 
 
-//Считаем потраченную сумму за день
-
+// php \xampp\htdocs\me\money.php 1 2 3
 ?>
 
 
