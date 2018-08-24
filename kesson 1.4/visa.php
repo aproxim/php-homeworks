@@ -1,4 +1,3 @@
-
 <?php
 if(!($fp = fopen("https://raw.githubusercontent.com/netology-code/php-2-homeworks/master/files/countries/opendata.csv", "r"))){
 	echo "Невозможно открыть файл с данными.";
