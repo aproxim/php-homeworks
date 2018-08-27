@@ -1,20 +1,20 @@
-<?php
-if(!($fp = fopen("https://raw.githubusercontent.com/netology-code/php-2-homeworks/master/files/countries/opendata.csv", "r"))){
-	echo "Невозможно открыть файл с данными.";
-}else {	
-	for ($i=0; $i=fgetcsv($fp,1000, ",");
-	$i++){	
-		$array =  $fp[$i];
-	}
-	if ($argv[1]=== $array [1]){
-		$visa = $array [4];
-        echo "$argv[1]: $visa[4]";
-	} 
-    else {
-		echo "Страна не найдена";
-	}
-}
 
+<?php
+$count=0;
+$file = "https://raw.githubusercontent.com/netology-code/php-2-homeworks/master/files/countries/opendata.csv";
+$country = implode(" ", array_slice($argv, 1));
+
+$fp = fopen($file, 'r');
+while (($row = fgetcsv($fp, 100, ',')) !== FALSE) {
+    if (count($row) <= 1) { 
+		continue;
+    } if ($country == $row[1]){
+		$count++;
+		echo $country." ".$row[4];  	
+	}
+} if ($count===0) {
+    echo "Страна не найдена";
+}
 fclose($fp);
 
 // php \xampp\htdocs\me\visa.php Абхазия
