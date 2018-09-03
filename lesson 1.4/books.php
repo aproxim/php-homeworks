@@ -1,4 +1,4 @@
-<?
+<?php
 $file = "\xampp\htdocs\me\books.csv";
 
 $query = implode(" ", array_slice($argv, 1));
