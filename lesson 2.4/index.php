@@ -1,61 +1,90 @@
 <?php
-function isJSON($string) {
-    return ((is_string($string) && (is_object(json_decode($string)) || is_array(json_decode($string))))) ? true : false;
+require_once 'src/core.php';
+if (isset($_COOKIE['ban'])) {
+    location('ban.php');
 }
-// Если был получен POST-запрос с файлом, то проверяем, подходит ли он
-if (isset($_POST['upload'])) {
-    // Определяем массив со всеми файлами из папки с тестами
-    if (!empty(glob('tests/*.json'))) {
-        $allFiles = glob('tests/*.json');
-    } else {
-        $allFiles = [0];
-    }
-    // Определяем загружаемый файл
-    $uploadfile = 'tests/' . basename($_FILES['testfile']['name']);
-    // Прогоняем файл по if'ам, если не подходит - выкидываем ошибку
-    if (pathinfo($_FILES['testfile']['name'], PATHINFO_EXTENSION) !== 'json') {
-        $result = "<p>Можно загружать файлы только с расширением json</p>";
-    } else if ($_FILES["testfile"]["size"] > 1024 * 1024 * 1024) {
-        $result = "<p>Размер файла превышает три мегабайта</p>";
-    } else if (in_array($uploadfile, $allFiles, true)) {
-        $result = "<p>Файл с таким именем уже существует.</p>";
-    } else if (move_uploaded_file($_FILES['testfile']['tmp_name'], $uploadfile)) {
-        $result = "<p>Файл корректен и успешно загружен на сервер</p>";
-    } else {
-        $result = "<p>Произошла ошибка</p>";
-    }
-    if(isJSON($uploadfile)) echo "Valid!";
+if (isAuthorized() || isQuest()) {
+    location('admin.php');
 }
+if (!isset($_SESSION['incorrect'])) $_SESSION['incorrect'] = 0;
+$errors = [];
+if ($_SESSION['incorrect'] < 5) {
+    if (!empty($_POST['enterAsUser'])) {
+        if (login($_POST['login'], $_POST['password'])) {
+            location('admin.php');
+        } else {
+            $errors[] = 'Неверный логин или пароль';
+            $_SESSION['incorrect']++;
+        }
+    }
+} else if ($_SESSION['incorrect'] < 10) {
+    if (!empty($_POST['enterAsUserWithCaptcha'])) {
+        if (login($_POST['login'], $_POST['password']) && checkCaptcha($_POST['captcha'], $_SESSION['captcha'])) {
+            location('admin.php');
+        }
+        if (!login($_POST['login'], $_POST['password']) || !checkCaptcha($_POST['captcha'], $_SESSION['captcha'])) {
+            $_SESSION['incorrect']++;
+            if (!login($_POST['login'], $_POST['password'])) {
+                $errors[] = 'Неверный логин или пароль!';
+            }
+            if (!checkCaptcha($_POST['captcha'], $_SESSION['captcha'])) {
+                $errors[] = 'Неверно распознана каптча!';
+            }
+        }
+    }
+}
+if ($_SESSION['incorrect'] === 10) {
+    banUser();
+    location('ban.php');
+}
+if (isset($_POST['enterAsQuest'])) {
+    $_SESSION['quest']['username'] = str_replace(' ', '', $_POST['username']);
+    location('admin.php');
+}
+echo $_SESSION['incorrect'];
+echo '</br>';
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Домашнее задание2.2</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Войти</title>
+    <link rel="stylesheet" href="styles/index.css">
 </head>
 <body>
-<?php if (isset($_POST['upload'])): ?>
-    <a href="<?php $_SERVER['HTTP_REFERER'] ?>"><div>< Назад</div></a>
-    <?php echo $result; ?>
-<?php endif; ?>
 
+<ul>
+    <?php foreach ($errors as $error): ?>
+        <li><?php echo $error ?></li>
+    <?php endforeach; ?>
+</ul>
 
-<?php if (!isset($_POST['create']) && !isset($_POST['upload'])): ?>
-
-    <form id="load-json" method="POST" enctype="multipart/form-data">
-        <fieldset>
-            <legend>Загрузите свой тест в формате json</legend>
-            <input type="file" name="testfile" id="uploadfile" required>
-            <input type="submit" value="Добавить в базу" id="submit-upload" name="upload">
-        </fieldset>
+<fieldset>
+    <legend>Авторизуйтесь (admin:admin)</legend>
+    <form method="POST">
+        <label>Логин:&nbsp;&nbsp;&nbsp;<input type="text" name="login" id="login"></label><br>
+        <label>Пароль:&nbsp;<input type="text" name="password" id="password"></label><br>
+        <?php if ($_SESSION['incorrect'] < 5): ?>
+            <input type="submit" value="Войти" name="enterAsUser">
+        <?php endif; ?>
+        <?php if ($_SESSION['incorrect'] >= 5): ?>
+            Введите каптчу с картинки:<br>
+            <img src="src/captcha.php" alt="Каптча"><br>
+            <input type="text" name="captcha" <!--required-->>
+            <input type="submit" value="Войти" name="enterAsUserWithCaptcha">
+        <?php endif; ?>
     </form>
+</fieldset>
 
-    <div class="all-tests">
-        <fieldset>
-            <a href="list.php">Посмотреть все тесты >></a>
-        </fieldset>
-    </div>
+<fieldset style="margin-top: 25px;">
+    <legend>Или войдите как гость</legend>
+    <form method="POST">
+        <label>Введите ваше имя: <input type="text" name="username" id="username" required></label>
+        <input type="submit" name="enterAsQuest" value="Войти">
+    </form>
+</fieldset>
 
-<?php endif; ?>
 </body>
 </html>
